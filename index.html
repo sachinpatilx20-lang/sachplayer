@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SACH.IN</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .file-loaders {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px) {
+      .file-loaders {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .file-input-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .file-input-card label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .file-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .file-box:hover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .file-box.loaded {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .file-box p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-box span {
+      font-size: 0.8rem;
+      color: #22c55e;
+      display: block;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Player Wrapper (holds video viewport + controls in fullscreen) */
+    .player-wrapper {
+      position: relative;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      outline: none;
+    }
+
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      background: var(--card-bg);
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 50;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .timeline-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .time-label {
+      font-size: 0.85rem;
+      font-family: monospace;
+      color: var(--text-muted);
+      min-width: 65px;
+      user-select: none;
+    }
+
+    .timeline-container input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 6px;
+      cursor: pointer;
+    }
+
+    .button-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .main-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button.btn {
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    button.btn:active {
+      transform: scale(0.97);
+    }
+
+    button.btn:hover {
+      background: var(--accent-hover);
+    }
+
+    button.btn-sec {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    button.btn-sec:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .sync-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .control-group select,
+    .control-group input[type="number"] {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .control-group select:focus,
+    .control-group input[type="number"]:focus {
+      border-color: var(--accent);
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: #334155;
+      color: #94a3b8;
+    }
+
+    .status-badge.synced {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+
+    /* FULLSCREEN MODE STYLES */
+    .player-wrapper:fullscreen,
+    .player-wrapper:-webkit-full-screen,
+    .player-wrapper.is-fullscreen {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+      background: #000;
+      justify-content: center;
+    }
+
+    .player-wrapper:fullscreen .video-viewport,
+    .player-wrapper:-webkit-full-screen .video-viewport,
+    .player-wrapper.is-fullscreen .video-viewport {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: auto;
+    }
+
+    .player-wrapper:fullscreen .controls-panel,
+    .player-wrapper:-webkit-full-screen .controls-panel,
+    .player-wrapper.is-fullscreen .controls-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-radius: 0;
+      border: none;
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 60%, rgba(15, 23, 42, 0.4) 85%, transparent 100%);
+      padding: 24px 24px 18px 24px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Autohide controls in fullscreen when idle */
+    .player-wrapper:fullscreen.hide-controls,
+    .player-wrapper:-webkit-full-screen.hide-controls,
+    .player-wrapper.is-fullscreen.hide-controls {
+      cursor: none;
+    }
+
+    .player-wrapper:fullscreen.hide-controls .controls-panel,
+    .player-wrapper:-webkit-full-screen.hide-controls .controls-panel,
+    .player-wrapper.is-fullscreen.hide-controls .controls-panel {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(15px);
+    }
+
+    .shortcut-hints {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .shortcut-hints kbd {
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #334155;
+      font-family: monospace;
+      color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1>SACH.IN</h1>
+      <p>Screen video + audio player with fullscreen controls and real-time sync</p>
+    </header>
+
+    <div class="file-loaders">
+      <div class="file-input-card">
+        <label>1. Screen Video (deskshare.mkv)</label>
+        <div class="file-box" id="videoBox" onclick="document.getElementById('videoInput').click()">
+          <p id="videoBoxText">Click to select <b>deskshare.mkv</b></p>
+          <span id="videoStatus"></span>
+        </div>
+        <input type="file" id="videoInput" accept=".mkv,.mp4,.webm">
+      </div>
+
+      <div class="file-input-card">
+        <label>2. Audio Track (webcams.mp3)</label>
+        <div class="file-box" id="audioBox" onclick="document.getElementById('audioInput').click()">
+          <p id="audioBoxText">Click to select <b>webcams.mp3</b></p>
+          <span id="audioStatus"></span>
+        </div>
+        <input type="file" id="audioInput" accept=".mp3,.wav,.ogg,.m4a,.webm">
+      </div>
+    </div>
+
+    <!-- Complete Player Unit (Container that enters Fullscreen) -->
+    <div class="player-wrapper" id="playerWrapper" tabindex="0">
+      <div class="video-viewport" id="videoViewport" title="Click to Play/Pause, Double Click for Fullscreen">
+        <video id="videoElement" playsinline></video>
+        <audio id="audioElement"></audio>
+      </div>
+
+      <!-- Controls Panel (Stays visible in Fullscreen too!) -->
+      <div class="controls-panel" id="controlsPanel">
+        <!-- Seekbar -->
+        <div class="timeline-container">
+          <span class="time-label" id="currentTimeLabel">00:00:00</span>
+          <input type="range" id="progressBar" min="0" max="100" value="0" step="0.1">
+          <span class="time-label" id="totalTimeLabel">00:00:00</span>
+        </div>
+
+        <!-- Buttons and Settings -->
+        <div class="button-row">
+          <div class="main-btns">
+            <button class="btn" id="playBtn">Play</button>
+            <button class="btn btn-sec" id="skipBackBtn" title="Back 10s">-10s</button>
+            <button class="btn btn-sec" id="skipFwdBtn" title="Forward 10s">+10s</button>
+            <span class="status-badge" id="syncBadge">Ready</span>
+          </div>
+
+          <div class="sync-controls">
+            <!-- Audio Offset -->
+            <div class="control-group">
+              <label for="offsetInput" title="Positive = delay audio, Negative = audio plays sooner">Audio
+                Delay:</label>
+              <input type="number" id="offsetInput" value="0" step="0.5" style="width: 65px;" title="Seconds">
+              <span>s</span>
+            </div>
+
+            <!-- Speed -->
+            <div class="control-group">
+              <label for="speedSelect">Speed:</label>
+              <select id="speedSelect">
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1.0x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2.0x</option>
+              </select>
+            </div>
+
+            <!-- Volume -->
+            <div class="control-group">
+              <label for="volumeSlider">Vol:</label>
+              <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1"
+                style="width: 75px; accent-color: var(--accent);">
+            </div>
+
+            <!-- Fullscreen Toggle -->
+            <button class="btn btn-sec" id="fullscreenBtn" title="Toggle Fullscreen">⛶ Fullscreen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shortcut-hints">
+      Keyboard shortcuts: <kbd>Space</kbd> Play/Pause &nbsp;|&nbsp; <kbd>F</kbd> Fullscreen &nbsp;|&nbsp; <kbd>←</kbd> /
+      <kbd>→</kbd> -10s / +10s &nbsp;|&nbsp; <kbd>↑</kbd> / <kbd>↓</kbd> Volume
+    </div>
+  </div>
+
+  <script>
+    const playerWrapper = document.getElementById('playerWrapper');
+    const videoViewport = document.getElementById('videoViewport');
+    const video = document.getElementById('videoElement');
+    const audio = document.getElementById('audioElement');
+    const videoInput = document.getElementById('videoInput');
+    const audioInput = document.getElementById('audioInput');
+    const playBtn = document.getElementById('playBtn');
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeLabel = document.getElementById('currentTimeLabel');
+    const totalTimeLabel = document.getElementById('totalTimeLabel');
+    const speedSelect = document.getElementById('speedSelect');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const offsetInput = document.getElementById('offsetInput');
+    const syncBadge = document.getElementById('syncBadge');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const controlsPanel = document.getElementById('controlsPanel');
+
+    let audioOffset = 0; // seconds
+    let hideControlsTimeout = null;
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds < 0) return '00:00:00';
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      return [
+        h.toString().padStart(2, '0'),
+        m.toString().padStart(2, '0'),
+        s.toString().padStart(2, '0')
+      ].join(':');
+    }
+
+    // File loading
+    videoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        video.src = URL.createObjectURL(file);
+        document.getElementById('videoBox').classList.add('loaded');
+        document.getElementById('videoBoxText').textContent = file.name;
+        document.getElementById('videoStatus').textContent = '✓ Loaded';
+      }
+    });
+
+    audioInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        audio.src = URL.createObjectURL(file);
+        document.getElementById('audioBox').classList.add('loaded');
+        document.getElementById('audioBoxText').textContent = file.name;
+        document.getElementById('audioStatus').textContent = '✓ Loaded';
+      }
+    });
+
+    // Synchronize audio timestamp to match video timestamp + offset
+    function syncAudioWithVideo() {
+      const targetAudioTime = Math.max(0, video.currentTime + audioOffset);
+      if (Math.abs(audio.currentTime - targetAudioTime) > 0.15) {
+        audio.currentTime = targetAudioTime;
+      }
+    }
+
+    function togglePlay() {
+      if (video.paused) {
+        syncAudioWithVideo();
+        video.play();
+        if (audio.src) audio.play();
+        playBtn.textContent = 'Pause';
+      } else {
+        video.pause();
+        audio.pause();
+        playBtn.textContent = 'Play';
+      }
+    }
+
+    playBtn.addEventListener('click', togglePlay);
+
+    // Single click on video viewport toggles Play/Pause
+    videoViewport.addEventListener('click', (e) => {
+      togglePlay();
+    });
+
+    // Double click on video viewport toggles Fullscreen
+    videoViewport.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      toggleFullscreen();
+    });
+
+    // Video metadata & timeline tracking
+    video.addEventListener('loadedmetadata', () => {
+      progressBar.max = video.duration || 100;
+      totalTimeLabel.textContent = formatTime(video.duration);
+    });
+
+    video.addEventListener('timeupdate', () => {
+      progressBar.value = video.currentTime;
+      currentTimeLabel.textContent = formatTime(video.currentTime);
+
+      if (!video.paused && audio.src) {
+        const expectedAudioTime = video.currentTime + audioOffset;
+        if (Math.abs(audio.currentTime - expectedAudioTime) > 0.25) {
+          audio.currentTime = Math.max(0, expectedAudioTime);
+          syncBadge.textContent = 'Re-syncing';
+          syncBadge.className = 'status-badge';
+        } else {
+          syncBadge.textContent = 'Synced';
+          syncBadge.className = 'status-badge synced';
+        }
+      }
+    });
+
+    progressBar.addEventListener('input', () => {
+      const time = parseFloat(progressBar.value);
+      video.currentTime = time;
+      syncAudioWithVideo();
+      currentTimeLabel.textContent = formatTime(time);
+    });
+
+    document.getElementById('skipBackBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      video.currentTime = Math.max(0, video.currentTime - 10);
+      syncAudioWithVideo();
+    });
+
+    document.getElementById('skipFwdBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      video.currentTime = Math.min(video.duration || 999999, video.currentTime + 10);
+      syncAudioWithVideo();
+    });
+
+    speedSelect.addEventListener('change', (e) => {
+      const rate = parseFloat(e.target.value);
+      video.playbackRate = rate;
+      audio.playbackRate = rate;
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      const vol = parseFloat(e.target.value);
+      audio.volume = vol;
+      video.volume = vol;
+    });
+
+    offsetInput.addEventListener('change', (e) => {
+      audioOffset = parseFloat(e.target.value) || 0;
+      syncAudioWithVideo();
+    });
+
+    // FULLSCREEN HANDLING
+    function isFullscreenActive() {
+      return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function toggleFullscreen() {
+      if (!isFullscreenActive()) {
+        if (playerWrapper.requestFullscreen) {
+          playerWrapper.requestFullscreen();
+        } else if (playerWrapper.webkitRequestFullscreen) {
+          playerWrapper.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    fullscreenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFullscreen();
+    });
+
+    // Update UI when fullscreen changes
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    function handleFullscreenChange() {
+      const active = isFullscreenActive();
+      playerWrapper.classList.toggle('is-fullscreen', active);
+      fullscreenBtn.textContent = active ? '🗗 Exit' : '⛶ Fullscreen';
+
+      if (!active) {
+        playerWrapper.classList.remove('hide-controls');
+        if (hideControlsTimeout) clearTimeout(hideControlsTimeout);
+      }
+    }
+
+    // Auto-hide controls in fullscreen when idle, show on mouse movement
+    function showControls() {
+      playerWrapper.classList.remove('hide-controls');
+      if (hideControlsTimeout) clearTimeout(hideControlsTimeout);
+
+      if (isFullscreenActive() && !video.paused) {
+        hideControlsTimeout = setTimeout(() => {
+          // Hide only if not hovering on inputs/controls
+          if (!controlsPanel.matches(':hover')) {
+            playerWrapper.classList.add('hide-controls');
+          }
+        }, 2800);
+      }
+    }
+
+    playerWrapper.addEventListener('mousemove', showControls);
+    playerWrapper.addEventListener('pointerdown', showControls);
+
+    // Keep controls visible when interacting directly with controls
+    controlsPanel.addEventListener('mouseenter', () => {
+      playerWrapper.classList.remove('hide-controls');
+      if (hideControlsTimeout) clearTimeout(hideControlsTimeout);
+    });
+
+    controlsPanel.addEventListener('mouseleave', () => {
+      if (isFullscreenActive() && !video.paused) {
+        showControls();
+      }
+    });
+
+    // Global keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Don't trigger if user is typing in offset input
+      if (e.target.tagName === 'INPUT' && e.target.type === 'number') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+        showControls();
+      } else if (e.code === 'KeyF') {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        video.currentTime = Math.max(0, video.currentTime - 10);
+        syncAudioWithVideo();
+        showControls();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        video.currentTime = Math.min(video.duration || 999999, video.currentTime + 10);
+        syncAudioWithVideo();
+        showControls();
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        const newVol = Math.min(1, Math.round((audio.volume + 0.1) * 10) / 10);
+        audio.volume = newVol;
+        video.volume = newVol;
+        volumeSlider.value = newVol;
+        showControls();
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        const newVol = Math.max(0, Math.round((audio.volume - 0.1) * 10) / 10);
+        audio.volume = newVol;
+        video.volume = newVol;
+        volumeSlider.value = newVol;
+        showControls();
+      }
+    });
+  </script>
+</body>
+
+</html>
